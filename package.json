@@ -4,6 +4,9 @@
   "description": "AMQP integration for NestJS",
   "author": "Getúlio Magela Silva",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
