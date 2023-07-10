@@ -1,9 +1,15 @@
 {
   "name": "@gedai/nestjs-amqp",
-  "version": "1.0.0-beta1",
+  "version": "1.0.0-beta2",
   "description": "AMQP integration for NestJS",
   "author": "Getúlio Magela Silva",
   "private": false,
+  "keywords": [
+    "nestjs",
+    "exhange",
+    "rabbitmq",
+    "amqp"
+  ],
   "publishConfig": {
     "access": "public"
   },
