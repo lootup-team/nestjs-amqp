@@ -5,7 +5,7 @@ import { AmqpModuleOptions } from './amqp.factory';
 export const QueuesFromDecoratorsContainer = new Set<string>();
 
 export class MaximumAttemptReachedException extends Error {
-  constructor(readonly reason: any) {
+  constructor(readonly innerException: any) {
     super('Maximum retrial attempts reached');
   }
 }
