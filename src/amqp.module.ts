@@ -1,37 +1,54 @@
-import { DynamicModule, Module } from '@nestjs/common';
-import { AmqpConnection } from './amqp.connection';
-import { AmqpModuleAsyncOptions, AmqpModuleOptions } from './amqp.models';
+import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
+import { Global, Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AmqpModuleOptions } from './amqp.factory';
+import {
+  DELAYED_RETRIAL_EXCHANGE,
+  QueuesFromDecoratorsContainer,
+  REROUTER_QUEUE,
+  appendAdditionalQueues,
+  getChannels,
+  getConnectionName,
+} from './amqp.internals';
+import {
+  ConfigurableModuleClass,
+  MODULE_OPTIONS_TOKEN,
+} from './amqp.module-builder';
 import { AmqpService } from './amqp.service';
 
-@Module({})
-export class AmqpModule {
-  static forRoot(options: AmqpModuleOptions): DynamicModule {
-    const { url, isGlobal = false } = options;
-    return {
-      module: AmqpModule,
-      global: isGlobal,
-      providers: [
-        { provide: 'AmqpExchangeOptions', useValue: { url } },
-        AmqpConnection,
-        AmqpService,
-      ],
-      exports: [AmqpConnection],
-    };
-  }
+@Global()
+@Module({
+  imports: [
+    ConfigModule.forRoot(),
+    RabbitMQModule.forRootAsync(RabbitMQModule, {
+      inject: [MODULE_OPTIONS_TOKEN, ConfigService],
+      useFactory: (options: AmqpModuleOptions, config: ConfigService) => {
+        const { queues = [], exchanges = [] } = options;
+        appendAdditionalQueues(options, QueuesFromDecoratorsContainer);
+        exchanges.push(DELAYED_RETRIAL_EXCHANGE);
+        queues.push(REROUTER_QUEUE);
 
-  static forRootAsync(options: AmqpModuleAsyncOptions): DynamicModule {
-    const { imports, useFactory, inject, isGlobal = false } = options;
-
-    return {
-      module: AmqpModule,
-      imports,
-      global: isGlobal,
-      providers: [
-        { provide: 'AmqpExchangeOptions', inject, useFactory },
-        AmqpConnection,
-        AmqpService,
-      ],
-      exports: [AmqpConnection],
-    };
-  }
-}
+        return {
+          uri: options.url,
+          exchanges,
+          queues,
+          connectionInitOptions: { wait: false },
+          channels: getChannels(options),
+          connectionManagerOptions: {
+            connectionOptions: {
+              clientProperties: {
+                connection_name: getConnectionName(options, config),
+              },
+            },
+            reconnectTimeInSeconds: options.reconnectInSeconds ?? 10,
+            heartbeatIntervalInSeconds:
+              options.heartbeatIntervalInSeconds ?? 60,
+          },
+        };
+      },
+    }),
+  ],
+  providers: [AmqpService],
+  exports: [MODULE_OPTIONS_TOKEN, AmqpService],
+})
+export class AmqpModule extends ConfigurableModuleClass {}

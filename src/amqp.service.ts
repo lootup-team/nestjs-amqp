@@ -1,41 +1,73 @@
+import { ContextService } from '@gedai/core';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { Injectable } from '@nestjs/common';
-import { ChannelWrapper } from 'amqp-connection-manager';
-import { AmqpConnection } from './amqp.connection';
-import { MessageOptions } from './amqp.models';
+import { MessageProperties } from 'amqplib';
+import { randomUUID } from 'crypto';
+
+// export abstract class AmqpService {
+//   abstract sendToQueue(
+//     queue: string,
+//     content: object,
+//     properties?: MessageProperties,
+//   ): Promise<void>;
+
+//   abstract publish(
+//     exchange: string,
+//     routingKey: string,
+//     content: object,
+//     properties?: MessageProperties,
+//   ): Promise<void>;
+// }
 
 @Injectable()
 export class AmqpService {
-  private channel: ChannelWrapper;
-
-  constructor(private readonly connection: AmqpConnection) {}
-
-  async onModuleInit() {
-    this.connection.connect();
-    this.channel = this.connection.createChannel(this.constructor.name);
-
-    /** TODO: must assert queues and exchanges before trying to publish */
-  }
-
-  private assertResult(result: boolean) {
-    if (!result) {
-      throw new Error('MessageFailedError');
-    }
-  }
+  constructor(
+    private readonly amqp: AmqpConnection,
+    private readonly contextService: ContextService,
+  ) {}
 
   async publish(
     exchange: string,
     routingKey: string,
-    data: object,
-    options?: MessageOptions,
+    content: object,
+    properties?: MessageProperties,
   ) {
-    await this.channel
-      .publish(exchange, routingKey, Buffer.from(JSON.stringify(data)), options)
-      .then(this.assertResult);
+    await this.amqp.publish(exchange, routingKey, content, {
+      ...properties,
+      headers: this.factoryHeaders(properties?.headers),
+      messageId: this.factoryMessageId(properties?.messageId),
+    });
   }
 
-  async sendToQueue(queue: string, data: object, options?: MessageOptions) {
-    await this.channel
-      .sendToQueue(queue, Buffer.from(JSON.stringify(data)), options)
-      .then(this.assertResult);
+  async sendToQueue(
+    queue: string,
+    content: object,
+    properties?: MessageProperties,
+  ) {
+    const targetContent =
+      content instanceof Buffer
+        ? content
+        : Buffer.from(JSON.stringify(content));
+    await this.amqp.managedChannel.sendToQueue(queue, targetContent, {
+      ...properties,
+      headers: this.factoryHeaders(properties.headers),
+      messageId: this.factoryMessageId(properties.messageId),
+    });
+  }
+
+  get connection(): AmqpConnection {
+    return this.amqp;
+  }
+
+  private factoryHeaders(headers?: MessageProperties['headers']) {
+    const contextId = this.contextService.getId();
+    return {
+      ...(headers ?? {}),
+      'x-context-id': headers?.['x-context-id'] ?? contextId,
+    };
+  }
+
+  private factoryMessageId(id: any) {
+    return id ?? randomUUID();
   }
 }

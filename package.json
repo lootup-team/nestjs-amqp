@@ -1,31 +1,20 @@
 {
-  "name": "@gedai/nestjs-amqp",
-  "version": "1.0.0-beta2",
-  "description": "AMQP integration for NestJS",
-  "author": "Getúlio Magela Silva",
+  "name": "@gedai/amqp",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
   "private": false,
-  "keywords": [
-    "nestjs",
-    "exhange",
-    "rabbitmq",
-    "amqp"
-  ],
   "publishConfig": {
-    "access": "public"
+    "registry": "http://localhost:4873"
   },
-  "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "README.md",
     "LICENSE",
     "package*.json"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/gedai-dev/nestjs-amqp"
-  },
+  "license": "MIT",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -40,11 +29,16 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
+  "dependencies": {
+    "@golevelup/nestjs-rabbitmq": "^5.3.0",
+    "@nestjs/config": "^3.2.2"
+  },
   "peerDependencies": {
+    "@gedai/core": "^0.0.1",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
-    "reflect-metadata": "^0.1.13",
+    "reflect-metadata": "^0.1.13 || ^0.2.0",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
@@ -87,10 +81,5 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
-  },
-  "dependencies": {
-    "@nestjs/microservices": "^10.0.5",
-    "amqp-connection-manager": "^4.1.13",
-    "amqplib": "^0.10.3"
   }
 }
