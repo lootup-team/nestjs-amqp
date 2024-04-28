@@ -1,11 +1,16 @@
 {
-  "name": "@gedai/amqp",
+  "name": "@gedai/nestjs-amqp",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "Core Package for Gedai opionated use of NestJS",
+  "author": "gm50x",
   "private": false,
   "publishConfig": {
-    "registry": "http://localhost:4873"
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gedai-dev/nestjs-amqp.git"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -34,7 +39,7 @@
     "@nestjs/config": "^3.2.2"
   },
   "peerDependencies": {
-    "@gedai/core": "^0.0.1",
+    "@gedai/nestjs-core": "^0.0.1",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",

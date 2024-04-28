@@ -12,7 +12,7 @@ Opionated AMQP integration package to simplify microservices implementation in N
 ### Step 1: Installation
 
 ```bash
-$ npm install @gedai/core @gedai/common @gedai/amqp @nestjs/config
+$ npm install @gedai/nestjs-core @gedai/nestjs-common @gedai/amqp @nestjs/config
 ```
 
 ### Step 2: The Setup
@@ -32,8 +32,8 @@ import {
   configureRoutePrefix,
   configureValidation,
   configureVersioning,
-} from '@gedai/common';
-import { configureContextWrappers } from '@gedai/core';
+} from '@gedai/nestjs-common';
+import { configureContextWrappers } from '@gedai/nestjs-core';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -64,7 +64,7 @@ Create a class for your subscription handlers. These are common NestJS @Injectab
 
 ```typescript
 // amqp.subscription.ts
-import { ContextService } from '@gedai/core';
+import { ContextService } from '@gedai/nestjs-core';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -116,7 +116,7 @@ Import the required modules and create the specific setup for your needs.
 ```typescript
 // app.module.ts
 import { AmqpModule } from '@gedai/amqp';
-import { ContextModule } from '@gedai/core';
+import { ContextModule } from '@gedai/nestjs-core';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';

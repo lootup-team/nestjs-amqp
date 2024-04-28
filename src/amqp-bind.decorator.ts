@@ -1,4 +1,4 @@
-import { ReloadContext } from '@gedai/core';
+import { ReloadContext } from '@gedai/nestjs-core';
 import {
   RabbitHeader,
   RabbitPayload,
