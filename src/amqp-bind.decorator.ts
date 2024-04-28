@@ -90,9 +90,8 @@ export const AmqpSubscribe = ({
       queueOptions: { channel },
       errorHandler: (channel, message, error) => {
         /**
-         * Mixed Thoughts Here...
-         * Maybe we should handle bad messages in the retrial interceptor
-         * Only skipping the requeue engine when no retrial policy is provided
+         * TODO: Currently this shares synchronization code with retrial and inspector
+         * We need a mechanism to have a single place for such rule
          */
         if (error instanceof BadRequestException || !retrialPolicy) {
           return deadLetterNackErrorHandler(channel, message, error, queue);

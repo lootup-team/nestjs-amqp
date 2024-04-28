@@ -2,6 +2,10 @@ import { ConfigService } from '@nestjs/config';
 import { hostname } from 'os';
 import { AmqpModuleOptions } from './amqp.factory';
 
+/**
+ * TODO: needs refactoring and placing thing in their proper files
+ */
+
 export const QueuesFromDecoratorsContainer = new Set<string>();
 
 export class MaximumAttemptReachedException extends Error {

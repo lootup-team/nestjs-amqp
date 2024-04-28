@@ -28,6 +28,8 @@ import { AmqpService } from './amqp.service';
         exchanges.push(DELAYED_RETRIAL_EXCHANGE);
         queues.push(REROUTER_QUEUE);
 
+        // TODO: change for class setup simplifying this file
+
         return {
           uri: options.url,
           exchanges,

@@ -41,6 +41,11 @@ export class InspectAmqpMessageInterceptor implements NestInterceptor {
     error: any,
     retrialPolicy?: InspectionMetadata['retrialPolicy'],
   ) {
+    /**
+     * TODO: inspection; retrial; @golevelup/rabbitmq are sharing the responsability of
+     * deciding what happens to the message. This is bad, as a change in such a rule gets
+     * propagated to other places.
+     */
     if (error instanceof BadRequestException) {
       return 'Nack::BadRequest::DeadLetter';
     }

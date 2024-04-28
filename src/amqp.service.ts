@@ -4,21 +4,9 @@ import { Injectable } from '@nestjs/common';
 import { MessageProperties } from 'amqplib';
 import { randomUUID } from 'crypto';
 
-// export abstract class AmqpService {
-//   abstract sendToQueue(
-//     queue: string,
-//     content: object,
-//     properties?: MessageProperties,
-//   ): Promise<void>;
-
-//   abstract publish(
-//     exchange: string,
-//     routingKey: string,
-//     content: object,
-//     properties?: MessageProperties,
-//   ): Promise<void>;
-// }
-
+/**
+ * TODO: Should we expose connection?
+ */
 @Injectable()
 export class AmqpService {
   constructor(
