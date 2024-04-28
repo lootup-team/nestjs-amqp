@@ -1,3 +1,4 @@
+import { ReloadContext } from '@gedai/core';
 import {
   RabbitHeader,
   RabbitPayload,
@@ -8,6 +9,7 @@ import {
   BadRequestException,
   ExecutionContext,
   NestInterceptor,
+  Type,
   UseInterceptors,
   UsePipes,
   ValidationPipe,
@@ -15,11 +17,14 @@ import {
   createParamDecorator,
 } from '@nestjs/common';
 import { Channel } from 'amqp-connection-manager';
-import { ConsumeMessage } from 'amqplib';
+import { ConsumeMessage, Message } from 'amqplib';
 import { DelayCalculator } from './amqp-delay.calculator';
-import { InspectedMessage } from './amqp-inspection.interceptor';
-import { RetrialPolicy } from './amqp-retrial.interceptor';
-import { Throttled } from './amqp-throttler.interceptor';
+import {
+  InspectAmqpMessageInterceptor,
+  InspectedMessage,
+} from './amqp-inspection.interceptor';
+import { Retrial, RetrialInterceptor } from './amqp-retrial.interceptor';
+import { Throttle, ThrottledInterceptor } from './amqp-throttler.interceptor';
 import {
   AmqpParams,
   QueuesFromDecoratorsContainer,
@@ -28,7 +33,7 @@ import {
 
 export type RetrialPolicy = {
   maxAttempts: number;
-  timeBetweenAttemptsInSeconds: number;
+  delayBetweenAttemptsInSeconds: number;
   maxDelayInSeconds?: number;
   calculateDelay?: DelayCalculator;
 };
@@ -89,42 +94,60 @@ export const AmqpSubscribe = ({
          * Maybe we should handle bad messages in the retrial interceptor
          * Only skipping the requeue engine when no retrial policy is provided
          */
-        if (error instanceof BadRequestException) {
+        if (error instanceof BadRequestException || !retrialPolicy) {
           return deadLetterNackErrorHandler(channel, message, error, queue);
         }
         return defaultNackErrorHandler(channel, message, error);
+      },
+    }),
+    ReloadContext({
+      interceptorSetup: (context, executionContext) => {
+        const message = executionContext.switchToRpc().getContext<Message>();
+        // TODO: expose this parameter in core
+        const id = message.properties?.headers?.['x-context-id'];
+        context.setId(id);
       },
     }),
   ];
   if (enableValidation !== false) {
     decorators.push(UsePipes(ValidationPipe));
   }
-  const interceptors: NestInterceptor[] = [];
-
-  if (inspectMessage) {
-    interceptors.push(
-      InspectedMessage(
-        exchange,
-        routingKey,
-        queue,
-        retrialPolicy?.maxDelayInSeconds,
-        retrialPolicy?.maxAttempts,
-        retrialPolicy?.timeBetweenAttemptsInSeconds,
-      ),
+  const interceptors: Type<NestInterceptor>[] = [];
+  if (inspectMessage !== false) {
+    const retrialPolicyMeta = retrialPolicy
+      ? {
+          delayBetweenAttemptsInSeconds:
+            retrialPolicy?.delayBetweenAttemptsInSeconds,
+          maxAttempts: retrialPolicy?.maxAttempts,
+          maxDelayInSeconds: retrialPolicy?.maxDelayInSeconds,
+        }
+      : {};
+    decorators.push(
+      InspectedMessage({
+        binding: {
+          exchangeName: exchange,
+          routingKey,
+          queueName: queue,
+        },
+        retrialPolicy: retrialPolicyMeta,
+      }),
     );
+    interceptors.push(InspectAmqpMessageInterceptor);
 
     if (retrialPolicy) {
-      interceptors.push(
-        RetrialPolicy({
+      decorators.push(
+        Retrial({
           ...retrialPolicy,
           originalQueue: queue,
           originalRoutingKey: routingKey,
         }),
       );
+      interceptors.push(RetrialInterceptor);
     }
 
     if (throttleMessagePerSecondRate) {
-      interceptors.push(Throttled(throttleMessagePerSecondRate));
+      decorators.push(Throttle(throttleMessagePerSecondRate));
+      interceptors.push(ThrottledInterceptor);
     }
   }
   if (interceptors.length) {

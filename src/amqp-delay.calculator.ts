@@ -1,6 +1,6 @@
 export type CalculateDelayParams = {
   currentAttempt: number;
-  timeBetweenAttemptsInSeconds: number;
+  delayBetweenAttemptsInSeconds: number;
   maxDelayInSeconds: number;
 };
 
@@ -8,13 +8,13 @@ export type DelayCalculator = (args: CalculateDelayParams) => number;
 
 export const doubleWithEveryAttemptDelayCalculator: DelayCalculator = ({
   currentAttempt,
-  timeBetweenAttemptsInSeconds,
+  delayBetweenAttemptsInSeconds,
   maxDelayInSeconds,
 }) => {
-  const delay = timeBetweenAttemptsInSeconds * Math.pow(2, currentAttempt - 1);
+  const delay = delayBetweenAttemptsInSeconds * Math.pow(2, currentAttempt - 1);
   return delay > maxDelayInSeconds ? maxDelayInSeconds : delay;
 };
 
 export const constantWithEveryAttemptDelayCalculator: DelayCalculator = ({
-  timeBetweenAttemptsInSeconds,
-}) => timeBetweenAttemptsInSeconds;
+  delayBetweenAttemptsInSeconds,
+}) => delayBetweenAttemptsInSeconds;
