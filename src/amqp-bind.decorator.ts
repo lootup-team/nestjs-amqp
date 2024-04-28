@@ -80,6 +80,7 @@ export const AmqpSubscribe = ({
   inspectMessage,
   throttleMessagePerSecondRate,
 }: AmqpSubscribeOptions) => {
+  // TODO: should validate these before setting up and throw on missing values (like empty queue name)
   QueuesFromDecoratorsContainer.add(queue);
   const decorators = [
     RabbitSubscribe({
