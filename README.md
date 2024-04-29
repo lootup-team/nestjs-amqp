@@ -1,89 +1,40 @@
 ## Description
 
-Opionated AMQP integration package to simplify microservices implementation in NestJS. This package is a wrapper around @golevelup/rabbitmq and offers simple integration with other @gedai packages as well as Inspecting, Throttling and Retrying messages.
+This package is essentially a wrapper around `@golevelup/nestjs-rabbitmq`. It is highly focused on subscribing to messages from an exchange and offering some additional features:
 
-## Importante Notes
+- Retrial Policy
+- Throttling Policy
+- Message Inspection
+- Message Validation
 
-- This project does not implement Request/Response.
-- Although this project is stable, it is a POC and requires a lot of refactoring for improving its maintainability.
+## Requirements
+
+- RabbitMQ Server with X-Delayed-Message Plugin installed.
 
 ## Getting Started
 
 ### Step 1: Installation
 
 ```bash
-$ npm install @gedai/nestjs-core @gedai/nestjs-common @gedai/amqp @nestjs/config
+$ npm install @gedai/nestjs-core @gedai/nestjs-common @gedai/nestjs-amqp @nestjs/config
 ```
 
 ### Step 2: The Setup
 
-Apply global wide gedai configurations in main.ts, these are optional. Configuring Context Wrappers is highly recommended though.
+Create a common NestJS @Injectable() provider class for your subscription handlers.
 
 ```typescript
-// main.ts
-import {
-  configureCORS,
-  configureCompression,
-  configureExceptionLogger,
-  configureHelmet,
-  configureHttpInspectorInbound,
-  configureHttpInspectorOutbound,
-  configureLogger,
-  configureRoutePrefix,
-  configureValidation,
-  configureVersioning,
-} from '@gedai/nestjs-common';
-import { configureContextWrappers } from '@gedai/nestjs-core';
-import { ConfigService } from '@nestjs/config';
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
-    .then(configureContextWrappers())
-    .then(configureLogger())
-    .then(configureHttpInspectorInbound())
-    .then(configureHttpInspectorOutbound())
-    .then(configureExceptionLogger())
-    .then(configureCORS())
-    .then(configureHelmet())
-    .then(configureCompression())
-    .then(configureValidation())
-    .then(configureVersioning())
-    .then(configureRoutePrefix());
-
-  const config = app.get(ConfigService);
-  const port = config.get('PORT', '3000');
-
-  await app.listen(port);
-}
-bootstrap();
-```
-
-Create a class for your subscription handlers. These are common NestJS @Injectable Providers. You can also use class-validator if the configuration has been enabled with configureValidation in main.ts
-
-```typescript
-// amqp.subscription.ts
+// app.subscription.ts
 import { ContextService } from '@gedai/nestjs-core';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 import { AmqpHeaders, AmqpPayload, AmqpSubscribe } from '@gedai/amqp';
 import { Injectable, Logger } from '@nestjs/common';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
 import { AppService } from './app.service';
 
-class MyMessage {
-  @IsString()
-  message: string;
-
-  @IsNumber()
-  @IsOptional()
-  failTimes: number;
-}
-
 @Injectable()
-export class AmqpSubscription {
+export class AppSubscription {
   private readonly logger = new Logger(this.constructor.name);
 
   constructor(private readonly appService: AppService) {}
@@ -93,25 +44,16 @@ export class AmqpSubscription {
     exchange: 'my.exchange',
     queue: 'my.consumer1',
     routingKey: '#',
-    // The channel must be declared in app.module during the module setup
     channel: 'myChannel1',
-    // optional: add message throttling
-    throttleMessagePerSecondRate: 1,
-    // optional: add message retrial policy
-    retrialPolicy: {
-      maxAttempts: 2,
-      delayBetweenAttemptsInSeconds: 5,
-      maxDelayInSeconds: 5,
-    },
   })
-  async getHello(@AmqpPayload() data: MyMessage, @AmqpHeaders() msg: any) {
+  async getHello(@AmqpPayload() data: any, @AmqpHeaders() headers: any) {
     this.logger.log('Got a message', 'Consumer 1');
   }
 }
 
 ```
 
-Import the required modules and create the specific setup for your needs.
+Import the required modules and create the required setup.
 
 ```typescript
 // app.module.ts
@@ -126,24 +68,22 @@ import { AppService } from './app.service';
 
 @Module({
   imports: [
-    // <<-- IMPORT CONFIG -->>
-    ConfigModule.forRoot({ isGlobal: true }),
     // <<-- IMPORT CONTEXT -->>
     ContextModule.forRoot({}),
     // <<-- IMPORT AMQP -->>
     AmqpModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        // <<-- PROVIDE YOUR AMQP URL -->>
+        // <<-- PROVIDE AMQP URL -->>
         url: config.getOrThrow('AMQP_URL'),
-        // <<-- DECLARE YOUR EXCHANGES -->>
+        // <<-- DECLARE EXCHANGES -->>
         exchanges: [{ name: 'my.exchange' }],
-        // <<-- DECLARE YOUR CHANNELS -->>
+        // <<-- DECLARE CHANNELS -->>
         channels: [
           { name: 'myPublisher1', default: true },
           { name: 'myChannel1', prefetchCount: 1 },
         ],
-        // <<-- DECLARE YOUR QUEUES -->>
+        // <<-- DECLARE QUEUES -->>
         queues: [
           { name: 'my.consumer1' },
           // :: Keep Layout ::
@@ -152,46 +92,145 @@ import { AppService } from './app.service';
     }),
   ],
   controllers: [AppController],
-  // <<-- We add -->>
-  providers: [AppService, AmqpSubscriber],
+  // <<-- Add AppSubscription in the Providers Array -->>
+  providers: [AppService, AppSubscription],
 })
 export class AppModule {}
 ```
 
+## Retrial Policy Setup
+
+To add a retrial policy, simply apply the decorator to your handler.
+
+```typescript
+// app.subscription.ts
+import { ContextService } from '@gedai/nestjs-core';
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+import {
+  AmqpHeaders,
+  AmqpPayload,
+  AmqpRetrialPolicy,
+  AmqpSubscription
+} from '@gedai/amqp';
+import { Injectable, Logger } from '@nestjs/common';
+import { AppService } from './app.service';
+
+@Injectable()
+export class AppSubscription {
+  private readonly logger = new Logger(this.constructor.name);
+
+  constructor(private readonly appService: AppService) {}
+
+  @AmqpSubscription({
+    exchange: 'my.exchange',
+    queue: 'my.consumer1',
+    routingKey: '#',
+    channel: 'myChannel1',
+  })
+  // <<-- Add Your Policy -->>
+  @AmqpRetrialPolicy({ maxAttempts: 2, delayTime: 5, maxDelay: 5 })
+  async getHello(@AmqpPayload() data: any, @AmqpHeaders() headers: any) {
+    this.logger.log('Got a message', 'Consumer 1');
+  }
+}
+```
+
+## Throttle Policy Setup
+
+To add a throttle policy, simply apply the decorator to your handler.
+
+```typescript
+// app.subscription.ts
+import { ContextService } from '@gedai/nestjs-core';
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+import {
+  AmqpHeaders,
+  AmqpPayload,
+  AmqpThrottlePolicy,
+  AmqpSubscription
+} from '@gedai/amqp';
+import { Injectable, Logger } from '@nestjs/common';
+import { AppService } from './app.service';
+
+@Injectable()
+export class AppSubscription {
+  private readonly logger = new Logger(this.constructor.name);
+
+  constructor(private readonly appService: AppService) {}
+
+  @AmqpSubscription({
+    exchange: 'my.exchange',
+    queue: 'my.consumer1',
+    routingKey: '#',
+    channel: 'myChannel1',
+  })
+  // <<-- Add Your Policy -->>
+  @AmqpThrottlePolicy(5)
+  async getHello(@AmqpPayload() data: any, @AmqpHeaders() headers: any) {
+    this.logger.log('Got a message', 'Consumer 1');
+  }
+}
+```
+
+## Validation
+
+Create and configure your DTOs with class validator and set them in the handler.
+
+```typescript
+// app.subscription.ts
+import { ContextService } from '@gedai/nestjs-core';
+import { Injectable } from '@nestjs/common';
+import { IsString } from 'class-validator';
+
+@Injectable()
+import {
+  AmqpHeaders,
+  AmqpPayload,
+  AmqpThrottlePolicy,
+  AmqpSubscription
+} from '@gedai/amqp';
+import { Injectable, Logger } from '@nestjs/common';
+import { AppService } from './app.service';
+
+class DogDTO {
+  @IsString()
+  name: string,
+
+  @IsString()
+  breed: string
+}
+
+@Injectable()
+export class AppSubscription {
+  private readonly logger = new Logger(this.constructor.name);
+
+  constructor(private readonly appService: AppService) {}
+
+  @AmqpSubscription({
+    exchange: 'my.exchange',
+    queue: 'my.consumer1',
+    routingKey: '#',
+    channel: 'myChannel1',
+  })
+  async getHello(@AmqpPayload() data: DogDTO, @AmqpHeaders() headers: any) {
+    this.logger.log('Got a message', 'Consumer 1');
+  }
+}
+```
+
 ## Architecture
 
-This module uses RabbitMQ X-Delayed-Message plugin for handling delayed delayed retrials. By detecting an error the message will be published to `delayed.retrial.v1.exchange` with the original queue as the routing key. After the specified delay, it will be sent to `delayed.retrial.v1.rerouter.queue`. This queue has the default exchange setup as it's dead letter exchange and is also configured to expire messages as soon as they have been received by the queue. Therefore, when a messages gets to the queue it is expired and sent do the dead letter exchange with the original queue as the routing key. The default exchange will then, reroute the message into the original queue for consumption. If the maximum attempts is reached and the message keeps failing it will the sent to the DLQ. If the retrial policy is not provided or the message fails validation, they get sent to the DLQ directly.
+This module utilizes the `RabbitMQ Plugin X-Delayed-Message` to facilitate delayed retrials.
 
-### Retrial:
+Upon error detection, the message is dispatched to `delayed.retrial.v1.exchange`, with the original queue serving as the routing key. Subsequently, after the specified delay period, it is forwarded to `delayed.retrial.v1.rerouter.queue`. This queue is configured with the `amqp default exchange` as its dead letter exchange and is set to expire messages immediately upon receipt.
 
-```
-Original Exchange
--> Original Worker Queue
-  ->  Delayed Exchange
-    -> Rerouter Queue - Expire Instantly
-      -> Default Exchange
-        -> Original Worker Queue0
-```
+Consequently, upon reaching the queue, messages are expired and directed to the dead letter exchange, utilizing the original queue as the routing key. The `default exchange` then reroutes the message back into the original queue for consumption.
 
-### Dead Lettering On Max Attempts:
-
-```
-Original Exchange
--> Original Worker Queue
-  -> Max Attempts
-    -> Default Exchange
-      -> DQL
-```
-
-### Dead Lettering On Bad Messages:
-
-```
-Original Exchange
--> Original Worker Queue
-  -> BadRequest (Class Validator Validation)
-    -> Default Exchange
-      -> DQL
-```
+In the event `maximum attempts` is reached and the message continues to fail, it is then redirected to the Dead Letter Queue (DLQ). If no retrial policy is provided or if the message fails validation, it is directly routed to the DLQ.
 
 ## License
 
