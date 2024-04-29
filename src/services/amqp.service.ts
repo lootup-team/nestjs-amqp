@@ -4,9 +4,6 @@ import { Injectable } from '@nestjs/common';
 import { MessageProperties } from 'amqplib';
 import { randomUUID } from 'crypto';
 
-/**
- * TODO: Should we expose connection?
- */
 @Injectable()
 export class AmqpService {
   constructor(
@@ -41,10 +38,6 @@ export class AmqpService {
       headers: this.factoryHeaders(properties.headers),
       messageId: this.factoryMessageId(properties.messageId),
     });
-  }
-
-  get connection(): AmqpConnection {
-    return this.amqp;
   }
 
   private factoryHeaders(headers?: MessageProperties['headers']) {
