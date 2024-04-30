@@ -29,7 +29,7 @@ import { ContextService } from '@gedai/nestjs-core';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-import { AmqpHeaders, AmqpPayload, AmqpSubscribe } from '@gedai/amqp';
+import { AmqpHeaders, AmqpPayload, AmqpSubscribe } from '@gedai/nestjs-amqp';
 import { Injectable, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
 
@@ -57,7 +57,7 @@ Import the required modules and create the required setup.
 
 ```typescript
 // app.module.ts
-import { AmqpModule } from '@gedai/amqp';
+import { AmqpModule } from '@gedai/nestjs-amqp';
 import { ContextModule } from '@gedai/nestjs-core';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
@@ -113,7 +113,7 @@ import {
   AmqpPayload,
   AmqpRetrialPolicy,
   AmqpSubscription
-} from '@gedai/amqp';
+} from '@gedai/nestjs-amqp';
 import { Injectable, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
 
@@ -152,7 +152,7 @@ import {
   AmqpPayload,
   AmqpThrottlePolicy,
   AmqpSubscription
-} from '@gedai/amqp';
+} from '@gedai/nestjs-amqp';
 import { Injectable, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
 
@@ -192,7 +192,7 @@ import {
   AmqpPayload,
   AmqpThrottlePolicy,
   AmqpSubscription
-} from '@gedai/amqp';
+} from '@gedai/nestjs-amqp';
 import { Injectable, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
 
