@@ -48,12 +48,14 @@ export class AmqpInspectionService {
     error?: any,
   ) {
     const logLevel = error ? 'error' : 'log';
+    const message = `[AMQP] [OUTBOUND] [${exchange}] [${routingKey}]`;
+    const logData = {
+      binding: { exchange, routingKey },
+      message: { content, properties },
+    };
     this.logger[logLevel]({
-      message: `[AMQP] [OUTBOUND] [${exchange}] [${routingKey}]`,
-      data: {
-        binding: { exchange, routingKey },
-        publishMessage: { content, properties },
-      },
+      message,
+      amqp: logData,
       error,
     });
   }
@@ -77,7 +79,7 @@ export class AmqpInspectionService {
       binding,
       retrialPolicy,
       throttlePolicy,
-      consumeMessage: {
+      message: {
         fields,
         properties,
         content: data ?? content.toString('utf8'),
@@ -86,6 +88,6 @@ export class AmqpInspectionService {
       status,
     };
     const logLevel = this.getLogLevel(error);
-    this.logger[logLevel]({ message, data: logData });
+    this.logger[logLevel]({ message, amqp: logData });
   }
 }
