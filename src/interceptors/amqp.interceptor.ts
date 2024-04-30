@@ -69,7 +69,10 @@ export class AmqpInterceptor implements NestInterceptor {
           ),
       ),
       tap(() =>
-        this.inspector.inspect({ ...messageWithMetadata, status: 'Ack' }),
+        this.inspector.inspectInbound({
+          ...messageWithMetadata,
+          status: 'Ack',
+        }),
       ),
       catchError(async (error) => {
         try {
@@ -77,9 +80,13 @@ export class AmqpInterceptor implements NestInterceptor {
             ...messageWithMetadata,
             error,
           });
-          this.inspector.inspect({ ...messageWithMetadata, status, error });
+          this.inspector.inspectInbound({
+            ...messageWithMetadata,
+            status,
+            error,
+          });
         } catch (err) {
-          this.inspector.inspect({
+          this.inspector.inspectInbound({
             ...messageWithMetadata,
             status: 'Nack::Requeue::FailedPolicy',
             error: err,
