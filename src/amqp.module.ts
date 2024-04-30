@@ -14,6 +14,7 @@ import {
   DELAYED_RETRIAL_EXCHANGE,
   REROUTER_QUEUE,
 } from './utils/amqp-infrastructure.util';
+import { AmqpInspectionConfig } from './utils/amqp-inspection.config';
 import { QueuesFromDecoratorsContainer } from './utils/amqp.internals';
 import { appendAdditionalQueues } from './utils/append-additional-queues.utils';
 import { getChannels } from './utils/get-channels.util';
@@ -56,6 +57,14 @@ import { getConnectionName } from './utils/get-connection-name.util';
     AmqpThrottleService,
     AmqpInspectionService,
     AmqpRetrialService,
+    {
+      provide: AmqpInspectionConfig,
+      inject: [ConfigService],
+      useFactory: (config) =>
+        new AmqpInspectionConfig(
+          config.get('TRAFFIC_INSPECTION_AMQP', 'inbound'),
+        ),
+    },
   ],
   exports: [
     MODULE_OPTIONS_TOKEN,
