@@ -1,3 +1,4 @@
+import { AmqpModuleOptions } from '../amqp.factory';
 import { AmqpParams } from './amqp-params.util';
 
 export const DELAYED_RETRIAL_EXCHANGE = {
@@ -15,3 +16,10 @@ export const REROUTER_QUEUE = {
     deadLetterExchange: AmqpParams.DefaultExchange,
   },
 };
+
+export const AMQP_INTERNAL_DEFAULT_CHANNEL: AmqpModuleOptions['channels'][number] =
+  {
+    name: 'AMQP_INTERNAL_DEFAULT_CHANNEL',
+    default: true,
+    prefetchCount: 1,
+  };

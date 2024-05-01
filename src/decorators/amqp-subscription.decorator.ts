@@ -13,6 +13,7 @@ import {
 import { Message } from 'amqplib';
 import { AmqpInterceptor } from '../interceptors/amqp.interceptor';
 import {
+  ChannelsFromDecoratorsContainer,
   FailedPolicyException,
   QueuesFromDecoratorsContainer,
 } from '../utils/amqp.internals';
@@ -23,6 +24,7 @@ type SubscriptionOptions = {
   routingKey: string;
   queue: string;
   channel?: string;
+  prefetch?: number;
 };
 
 /**
@@ -34,6 +36,7 @@ type SubscriptionOptions = {
  * - `routingKey` - The binding routing key.
  * - `queue` - The queue that will be bound to the exchange.
  * - `channel` - The dedicated channel used in this handler.
+ * - `prefetch` - The number of messages to prefetch for this channel.
  *
  * @publicApi
  */
@@ -43,8 +46,13 @@ export const AmqpSubscription = ({
   routingKey,
   queue,
   channel,
+  prefetch,
 }: SubscriptionOptions) => {
   QueuesFromDecoratorsContainer.add(queue);
+  ChannelsFromDecoratorsContainer.push({
+    name: channel,
+    prefetchCount: prefetch,
+  });
   return applyDecorators(
     RabbitSubscribe({
       exchange,
