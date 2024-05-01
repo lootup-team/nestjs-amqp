@@ -1,6 +1,6 @@
 {
   "name": "@gedai/nestjs-amqp",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "AMQP Package for Gedai opionated use of NestJS",
   "author": "gm50x",
   "private": false,
