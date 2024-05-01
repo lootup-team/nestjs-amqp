@@ -1,34 +1,34 @@
+# @gedai/nestjs-amqp
+
 ## Description
 
-This package is essentially a wrapper around `@golevelup/nestjs-rabbitmq`. It is highly focused on subscribing to messages from an exchange and offering some additional features:
+This package serves as a comprehensive enhancement to the `@golevelup/nestjs-rabbitmq`, offering a seamless integration with NestJS applications. It extends functionalities to enable easy subscription to messages from an exchange while introducing several additional features to streamline message handling.
 
-- Retrial Policy
-- Throttling Policy
-- Message Inspection
-- Message Validation
+## Prerequisites
 
-## Requirements
+This package requires the installation of the following dependencies:
 
-- RabbitMQ Server with X-Delayed-Message Plugin installed.
+- `@gedai/nestjs-core`
+- `@gedai/nestjs-common`
 
-## Getting Started
+This package seamlessly integrates with RabbitMQ's `X-Delayed Message` Plugin to handle the delayed retrial of messages, optimizing message delivery and processing. A `RabbitMQ Server` with the plugin installed is needed in other for this pacakge to work.
+
+# Getting Started
 
 ### Step 1: Installation
+
+Install the necessary packages with your favorite Package Manager.
 
 ```bash
 $ npm install @gedai/nestjs-core @gedai/nestjs-common @gedai/nestjs-amqp @nestjs/config
 ```
 
-### Step 2: The Setup
+### Step 2: Configuration Setup
 
-Create a common NestJS @Injectable() provider class for your subscription handlers.
+Create a common NestJS `@Injectable()` provider class for your subscription handlers.
 
 ```typescript
 // app.subscription.ts
-import { ContextService } from '@gedai/nestjs-core';
-import { Injectable } from '@nestjs/common';
-
-@Injectable()
 import { AmqpHeaders, AmqpPayload, AmqpSubscribe } from '@gedai/nestjs-amqp';
 import { Injectable, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
@@ -39,7 +39,6 @@ export class AppSubscription {
 
   constructor(private readonly appService: AppService) {}
 
-  // <<-- Decorate the AMQP Subscription -->>
   @AmqpSubscribe({
     exchange: 'my.exchange',
     queue: 'my.consumer1',
@@ -50,158 +49,139 @@ export class AppSubscription {
     this.logger.log('Got a message', 'Consumer 1');
   }
 }
-
 ```
 
-Import the required modules and create the required setup.
+In your `app.module.ts`, import the required modules and set up the necessary dependencies.
 
 ```typescript
 // app.module.ts
 import { AmqpModule } from '@gedai/nestjs-amqp';
 import { ContextModule } from '@gedai/nestjs-core';
-import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AmqpSubscription } from './amqp.subscription';
+import { AppSubscription } from './app.subscription';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 @Module({
   imports: [
-    // <<-- IMPORT CONTEXT -->>
     ContextModule.forRoot({}),
-    // <<-- IMPORT AMQP -->>
     AmqpModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        // <<-- PROVIDE AMQP URL -->>
         url: config.getOrThrow('AMQP_URL'),
-        // <<-- DECLARE EXCHANGES -->>
-        exchanges: [{ name: 'my.exchange' }],
-        // <<-- DECLARE CHANNELS -->>
-        channels: [
-          { name: 'myPublisher1', default: true },
-          { name: 'myChannel1', prefetchCount: 1 },
-        ],
-        // <<-- DECLARE QUEUES -->>
-        queues: [
-          { name: 'my.consumer1' },
-          // :: Keep Layout ::
+        exchanges: [
+          { name: 'my.exchange' },
+          // ::keep layout::
         ],
       }),
     }),
   ],
   controllers: [AppController],
-  // <<-- Add AppSubscription in the Providers Array -->>
   providers: [AppService, AppSubscription],
 })
 export class AppModule {}
 ```
 
-## Retrial Policy Setup
+# Features
 
-To add a retrial policy, simply apply the decorator to your handler.
+## Retrial Policy
+
+Enables the definition and implementation of retrial policies for messages, ensuring robustness in message delivery. To integrate a retrial policy into your subscription handler, use the `@AmqpRetrialPolicy` decorator as follows:
 
 ```typescript
 // app.subscription.ts
-import { ContextService } from '@gedai/nestjs-core';
-import { Injectable } from '@nestjs/common';
-
-@Injectable()
+import { Injectable, Logger } from '@nestjs/common';
 import {
   AmqpHeaders,
   AmqpPayload,
   AmqpRetrialPolicy,
-  AmqpSubscription
+  AmqpSubscription,
 } from '@gedai/nestjs-amqp';
-import { Injectable, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Injectable()
 export class AppSubscription {
   private readonly logger = new Logger(this.constructor.name);
 
-  constructor(private readonly appService: AppService) {}
-
   @AmqpSubscription({
     exchange: 'my.exchange',
     queue: 'my.consumer1',
     routingKey: '#',
     channel: 'myChannel1',
+    prefetch: 10,
   })
-  // <<-- Add Your Policy -->>
-  @AmqpRetrialPolicy({ maxAttempts: 2, delayTime: 5, maxDelay: 5 })
+  // Apply Retrial Policy
+  @AmqpRetrialPolicy({ maxAttempts: 2, delayTime: 5000, maxDelay: 5000 })
   async getHello(@AmqpPayload() data: any, @AmqpHeaders() headers: any) {
-    this.logger.log('Got a message', 'Consumer 1');
+    this.logger.log('Received a message', 'Consumer 1');
   }
 }
 ```
 
-## Throttle Policy Setup
+## Throttling Policy
 
-To add a throttle policy, simply apply the decorator to your handler.
+Facilitates the implementation of throttling policies to regulate message consumption and processing, enhancing system stability under heavy loads. To integrate a throttling policy into your subscription handler, first set the prefetch on the handler to 1 and use the `@AmqpThrottlePolicy` decorator as follows:
 
 ```typescript
 // app.subscription.ts
-import { ContextService } from '@gedai/nestjs-core';
-import { Injectable } from '@nestjs/common';
-
-@Injectable()
+import { Injectable, Logger } from '@nestjs/common';
 import {
   AmqpHeaders,
   AmqpPayload,
   AmqpThrottlePolicy,
-  AmqpSubscription
+  AmqpSubscription,
 } from '@gedai/nestjs-amqp';
-import { Injectable, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Injectable()
 export class AppSubscription {
   private readonly logger = new Logger(this.constructor.name);
 
-  constructor(private readonly appService: AppService) {}
-
   @AmqpSubscription({
     exchange: 'my.exchange',
     queue: 'my.consumer1',
     routingKey: '#',
     channel: 'myChannel1',
+    prefetch: 1,
   })
-  // <<-- Add Your Policy -->>
-  @AmqpThrottlePolicy(5)
+  // Apply Retrial Policy
+  @AmqpRetrialPolicy(5) //messages per second rate
   async getHello(@AmqpPayload() data: any, @AmqpHeaders() headers: any) {
-    this.logger.log('Got a message', 'Consumer 1');
+    this.logger.log('Received a message', 'Consumer 1');
   }
 }
 ```
 
-## Validation
+## Message Inspection
 
-Create and configure your DTOs with class validator and set them in the handler.
+Provides tools for comprehensive message inspection, empowering developers to gain insights into message content and structure for effective debugging and monitoring.
+
+It can be configured with the environment variable `INSPECT_TRAFFIC_AMQP` which determine the inspection mode and supports the values `all`, `none`, `inbound`, or `outbound`.
+
+## Message Validation
+
+Supports message validation mechanisms, ensuring that incoming messages adhere to predefined schemas or criteria, thereby maintaining data integrity and system reliability. To set up validation for your DTOs, integrate them into your subscription handlers as follows:
 
 ```typescript
 // app.subscription.ts
-import { ContextService } from '@gedai/nestjs-core';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IsString } from 'class-validator';
-
-@Injectable()
 import {
   AmqpHeaders,
   AmqpPayload,
   AmqpThrottlePolicy,
-  AmqpSubscription
+  AmqpSubscription,
 } from '@gedai/nestjs-amqp';
-import { Injectable, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
 
+// Define DTOs with validation decorators
 class DogDTO {
   @IsString()
-  name: string,
+  name: string;
 
   @IsString()
-  breed: string
+  breed: string;
 }
 
 @Injectable()
@@ -216,13 +196,18 @@ export class AppSubscription {
     routingKey: '#',
     channel: 'myChannel1',
   })
-  async getHello(@AmqpPayload() data: DogDTO, @AmqpHeaders() headers: any) {
-    this.logger.log('Got a message', 'Consumer 1');
+  async getHello(
+    @AmqpPayload()
+    data: DogDTO /* Map DTOs in Handlers decorated with @AmqpPayload() */,
+    @AmqpHeaders() headers: any,
+  ) {
+    // Your message handling logic here
+    this.logger.log('Received a message', 'Consumer 1');
   }
 }
 ```
 
-## Architecture
+## Retrial Architecture
 
 This module utilizes the `RabbitMQ Plugin X-Delayed-Message` to facilitate delayed retrials.
 
