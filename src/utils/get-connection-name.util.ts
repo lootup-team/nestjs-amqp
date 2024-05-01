@@ -9,6 +9,10 @@ export const getConnectionName = (
   if (options.appName) {
     return options.appName;
   }
+  const serviceName = config.get('SERVICE_NAME');
+  if (serviceName) {
+    return serviceName;
+  }
   const packageName = config.get('npm_package_name');
   const packageVersion = config.get('npm_package_version');
   const host = hostname();
