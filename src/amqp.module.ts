@@ -17,6 +17,7 @@ import { InternalRabbitMQConfigFactory } from './utils/amqp.internals';
   imports: [
     ConfigModule.forRoot(),
     RabbitMQModule.forRootAsync(RabbitMQModule, {
+      imports: [ConfigModule.forRoot()],
       inject: [MODULE_OPTIONS_TOKEN, ConfigService],
       useFactory: InternalRabbitMQConfigFactory,
     }),
