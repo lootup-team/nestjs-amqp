@@ -59,6 +59,7 @@ In your `app.module.ts`, import the required modules and set up the necessary de
 import { AmqpModule } from '@gedai/nestjs-amqp';
 import { ContextModule } from '@gedai/nestjs-core';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
