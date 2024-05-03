@@ -44,20 +44,16 @@ export class AmqpRetrialService {
     const {
       calculateDelay = doubleWithEveryAttemptDelayCalculator,
       maxAttempts,
-      delayTime,
+      delay,
       maxDelay,
     } = retrialPolicy;
     const currentAttempt = getCurrentAttempt(consumeMessage);
     if (currentAttempt < maxAttempts) {
-      const delay =
-        calculateDelay({
-          currentAttempt,
-          delayTime,
-          maxDelay,
-        }) * 1000;
+      const calculatedDelay =
+        calculateDelay({ currentAttempt, delay, maxDelay }) * 1000;
       headers[AmqpParams.AttemptCountHeader] = currentAttempt;
       headers[AmqpParams.RoutingKeyHeader] = routingKey;
-      headers[AmqpParams.DelayHeader] = delay;
+      headers[AmqpParams.DelayHeader] = calculatedDelay;
       await this.amqp.publish(
         AmqpParams.DelayedExchange,
         queue,

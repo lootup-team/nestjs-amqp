@@ -4,7 +4,7 @@ import { AMQP_RETRIAL_POLICY_KEY } from './amqp-metadata.storage';
 
 export type RetrialPolicy = {
   maxAttempts: number;
-  delayTime: number;
+  delay: number;
   maxDelay: number;
   calculateDelay?: DelayCalculator;
 };
@@ -16,7 +16,7 @@ export type RetrialPolicy = {
  * @param {RetrialPolicy} opts - configuration object specifying:
  *
  * - `maxAttempts` - The maximum number of attempts before considering the message a dead letter.
- * - `delayTime` - The number of seconds to delay before retrying the message.
+ * - `delay` - The number of seconds to delay before retrying the message.
  * - `maxDelay` - The maximum number of seconds to delay before retrying the message, in case a incremental factor is provided.
  * - `calculateDelay` - The calculator that determines the amount of time to wait before retrying the message.
  *
