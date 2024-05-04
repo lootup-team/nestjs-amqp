@@ -59,14 +59,14 @@ In your `app.module.ts`, import the required modules and set up the necessary de
 import { AmqpModule } from '@gedai/nestjs-amqp';
 import { ContextModule } from '@gedai/nestjs-core';
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AppSubscription } from './app.subscription';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     ContextModule.forRoot({}),
     AmqpModule.forRootAsync({
       inject: [ConfigService],
@@ -159,7 +159,7 @@ export class AppSubscription {
 
 Provides tools for comprehensive message inspection, empowering developers to gain insights into message content and structure for effective debugging and monitoring.
 
-It can be configured with the environment variable `TRAFFIC_INSPECTION_AMQP` which determine the inspection mode and supports the values `all`, `none`, `inbound`, or `outbound`.
+It can be configured by providing `trafficInspection: { mode: 'all' }` to `AmqpModule` and supports the values `all`, `none`, `inbound`, or `outbound`.
 
 ## Message Validation
 
