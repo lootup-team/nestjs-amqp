@@ -4,6 +4,12 @@ import {
   RabbitMQQueueConfig,
 } from '@golevelup/nestjs-rabbitmq';
 
+export type AmqpTrafficInspectionOptions = {
+  mode?: 'none' | 'all' | 'inbound' | 'outbound';
+  // TODO: Implement this
+  // ignoredRoutingKeys: []
+};
+
 export type AmqpModuleOptions = {
   url: string;
   appName?: string;
@@ -12,6 +18,7 @@ export type AmqpModuleOptions = {
   exchanges?: RabbitMQExchangeConfig[];
   queues?: RabbitMQQueueConfig[];
   channels?: (RabbitMQChannelConfig & { name: string })[];
+  trafficInspection?: AmqpTrafficInspectionOptions;
 };
 
 export interface AmqpOptionsFactory {

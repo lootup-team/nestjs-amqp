@@ -35,8 +35,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@golevelup/nestjs-rabbitmq": "^5.3.0",
-    "@nestjs/config": "^3.2.2"
+    "@golevelup/nestjs-rabbitmq": "^5.3.0"
   },
   "peerDependencies": {
     "@gedai/nestjs-core": "^0.0.3",

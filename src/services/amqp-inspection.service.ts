@@ -1,9 +1,15 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Message, MessageProperties } from 'amqplib';
+import { AmqpModuleOptions } from '../amqp.factory';
+import { MODULE_OPTIONS_TOKEN } from '../amqp.module-builder';
 import { BindingOptions } from '../decorators/amqp-binding.decorator';
 import { RetrialPolicy } from '../decorators/amqp-retrial-policy.decorator';
 import { ThrottlePolicy } from '../decorators/amqp-throttle-policy.decorator';
-import { AmqpInspectionConfig } from '../utils/amqp-inspection.config';
 
 type InpsectInput = {
   consumeMessage: Message;
@@ -19,11 +25,15 @@ type InpsectInput = {
 export class AmqpInspectionService {
   private logger = new Logger(this.constructor.name);
 
-  constructor(private readonly config: AmqpInspectionConfig) {
-    if (!['inbound', 'all'].includes(config.inspectTraffic)) {
+  constructor(
+    @Inject(MODULE_OPTIONS_TOKEN)
+    private readonly config: AmqpModuleOptions,
+  ) {
+    const { mode = 'inbound' } = config.trafficInspection ?? {};
+    if (!['inbound', 'all'].includes(mode)) {
       this.inspectInbound = () => null;
     }
-    if (!['outbound', 'all'].includes(config.inspectTraffic)) {
+    if (!['outbound', 'all'].includes(mode)) {
       this.inspectOutbound = () => null;
     }
   }

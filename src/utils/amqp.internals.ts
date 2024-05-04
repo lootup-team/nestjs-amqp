@@ -1,4 +1,3 @@
-import { ConfigService } from '@nestjs/config';
 import { AmqpModuleOptions } from '../amqp.factory';
 import {
   AMQP_INTERNAL_DEFAULT_CHANNEL,
@@ -6,7 +5,6 @@ import {
   REROUTER_QUEUE,
 } from './amqp-infrastructure.util';
 import { formatChannels } from './format-channels.util';
-import { getConnectionName } from './get-connection-name.util';
 import { mergeChannels } from './merge-channels.util';
 import { mergeQueues } from './merge-queues.util';
 
@@ -30,10 +28,7 @@ export class FailedPolicyException extends Error {
   }
 }
 
-export const InternalRabbitMQConfigFactory = (
-  options: AmqpModuleOptions,
-  config: ConfigService,
-) => {
+export const InternalRabbitMQConfigFactory = (options: AmqpModuleOptions) => {
   const { exchanges = [] } = options;
   const queues = mergeQueues(options, QueuesFromDecoratorsContainer);
   exchanges.push(DELAYED_RETRIAL_EXCHANGE);
@@ -52,7 +47,7 @@ export const InternalRabbitMQConfigFactory = (
     connectionManagerOptions: {
       connectionOptions: {
         clientProperties: {
-          connection_name: getConnectionName(options, config),
+          connection_name: options.appName,
         },
       },
       reconnectTimeInSeconds: options.reconnectInSeconds ?? 10,
