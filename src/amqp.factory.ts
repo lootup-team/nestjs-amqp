@@ -7,7 +7,7 @@ import {
 export type AmqpTrafficInspectionOptions = {
   mode?: 'none' | 'all' | 'inbound' | 'outbound';
   // TODO: Implement this
-  // ignoredRoutingKeys: []
+  // ignoredBindings: []
 };
 
 export type AmqpModuleOptions = {
