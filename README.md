@@ -11,7 +11,7 @@ This package requires the installation of the following dependencies:
 - `@gedai/nestjs-core`
 - `@gedai/nestjs-common`
 
-This package seamlessly integrates with RabbitMQ's `X-Delayed Message` Plugin to handle the delayed retrial of messages, optimizing message delivery and processing. A `RabbitMQ Server` with the plugin installed is needed in order for this pacakge to work.
+This package seamlessly integrates with RabbitMQ's `X-Delayed Message` Plugin to handle the delayed retrial of messages, optimizing message delivery and processing. A `RabbitMQ Server` with the plugin installed is needed in order for this package to work.
 
 # Getting Started
 
