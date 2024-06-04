@@ -35,8 +35,8 @@ type SubscriptionOptions = {
  * - `exchange` - The exchange to bind this handler.
  * - `routingKey` - The binding routing key.
  * - `queue` - The queue that will be bound to the exchange.
- * - `channel` - The dedicated channel used in this handler.
- * - `prefetch` - The number of messages to prefetch for this channel.
+ * - `channel` - The dedicated channel used in this handler, defaults to <queueName>ConsumerChannel.
+ * - `prefetch` - The number of messages to prefetch for this channel, defaults to 1.
  *
  * @publicApi
  */
@@ -46,11 +46,11 @@ export const AmqpSubscription = ({
   routingKey,
   queue,
   channel,
-  prefetch,
+  prefetch = 1,
 }: SubscriptionOptions) => {
   QueuesFromDecoratorsContainer.add(queue);
   ChannelsFromDecoratorsContainer.push({
-    name: channel,
+    name: channel ?? `${queue}ConsumerChannel`,
     prefetchCount: prefetch,
   });
   return applyDecorators(
