@@ -71,8 +71,8 @@ export const AmqpSubscription = ({
       // TODO: not sure I like this approach
       interceptorSetup: (context, executionContext) => {
         const message = executionContext.switchToRpc().getContext<Message>();
-        const id = message.properties?.headers?.['x-context-id'];
-        context.setId(id);
+        const id = message.properties?.headers?.['x-correlation-id'];
+        context.setCorrelationId(id);
       },
     }),
     Binding({ exchange, routingKey, queue }),
