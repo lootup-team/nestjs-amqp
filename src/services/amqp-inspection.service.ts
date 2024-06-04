@@ -19,6 +19,7 @@ type InpsectInput = {
   binding?: BindingOptions;
   error?: any;
   status: string;
+  startTime: number;
 };
 
 @Injectable()
@@ -79,11 +80,13 @@ export class AmqpInspectionService {
       throttlePolicy,
       error,
       status,
+      startTime,
     } = args;
 
     const { exchange, routingKey, queue } = binding;
     const { content, fields, properties } = consumeMessage;
-    const message = `[AMQP] [INBOUND] [${exchange}] [${routingKey}] [${queue}] [${status}]`;
+    const duration = Date.now() - startTime;
+    const message = `[AMQP] [INBOUND] [${exchange}] [${routingKey}] [${queue}] [${status}] [${duration}ms]`;
 
     const logData = {
       binding,
@@ -98,6 +101,6 @@ export class AmqpInspectionService {
       status,
     };
     const logLevel = this.getLogLevel(error);
-    this.logger[logLevel]({ message, amqp: logData });
+    this.logger[logLevel]({ message, duration, amqp: logData });
   }
 }

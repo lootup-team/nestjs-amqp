@@ -60,6 +60,7 @@ export class AmqpInterceptor implements NestInterceptor {
       retrialPolicy,
       throttlePolicy,
     };
+    const startTime = Date.now();
     return next.handle().pipe(
       tap(
         async () =>
@@ -72,6 +73,7 @@ export class AmqpInterceptor implements NestInterceptor {
         this.inspector.inspectInbound({
           ...messageWithMetadata,
           status: 'Ack',
+          startTime,
         }),
       ),
       catchError(async (error) => {
@@ -84,12 +86,14 @@ export class AmqpInterceptor implements NestInterceptor {
             ...messageWithMetadata,
             status,
             error,
+            startTime,
           });
         } catch (err) {
           this.inspector.inspectInbound({
             ...messageWithMetadata,
             status: 'Nack::Requeue::FailedPolicy',
             error: err,
+            startTime,
           });
           throw new FailedPolicyException(err);
         }
