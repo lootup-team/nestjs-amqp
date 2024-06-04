@@ -9,7 +9,6 @@ This package serves as a comprehensive enhancement to the `@golevelup/nestjs-rab
 This package requires the installation of the following dependencies:
 
 - `@gedai/nestjs-core`
-- `@gedai/nestjs-common`
 
 This package seamlessly integrates with RabbitMQ's `X-Delayed Message` Plugin to handle the delayed retrial of messages, optimizing message delivery and processing. A `RabbitMQ Server` with the plugin installed is needed in order for this package to work.
 
@@ -147,8 +146,8 @@ export class AppSubscription {
     channel: 'myChannel1',
     prefetch: 1,
   })
-  // Apply Retrial Policy
-  @AmqpThrottlePolicy(5) //messages per second rate
+  // Apply Throttling Policy
+  @AmqpThrottlePolicy(5) //for 5 messages per second rate
   async getHello(@AmqpPayload() data: any, @AmqpHeaders() headers: any) {
     this.logger.log('Received a message', 'Consumer 1');
   }
@@ -208,6 +207,8 @@ export class AppSubscription {
   }
 }
 ```
+
+If a message fails validation it will go directly to the `dead letter queue` ignoring any retrial policy.
 
 ## Retrial Architecture
 
