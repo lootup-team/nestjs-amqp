@@ -1,4 +1,4 @@
-import { ReloadContext } from '@gedai/nestjs-core';
+import { ReloadContext } from '@lootupteam/nestjs-core';
 import {
   RabbitSubscribe,
   defaultNackErrorHandler,
