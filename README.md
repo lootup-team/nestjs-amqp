@@ -4,6 +4,9 @@
 
 This package serves as a comprehensive enhancement to the `@golevelup/nestjs-rabbitmq`, offering a seamless integration with NestJS applications. It extends functionalities to enable easy subscription to messages from an exchange while introducing several additional features to streamline message handling.
 
+## Why was this fork created?
+This package was originally developed by [gedai](https://github.com/gedai-dev), however he stopped maintaining it and so this fork was created. This repo may have improvements/changes in the future.
+
 ## Prerequisites
 
 This package requires the installation of the following dependencies:
