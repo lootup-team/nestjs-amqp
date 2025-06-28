@@ -1,6 +1,6 @@
 {
   "name": "@lootupteam/nestjs-amqp",
-  "version": "0.0.8",
+  "version": "1.0.0",
   "description": "AMQP component for gedai project",
   "author": "gm50x",
   "private": false,
