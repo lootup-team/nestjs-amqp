@@ -1,4 +1,4 @@
-# @gedai/nestjs-amqp
+# @lootupteam/nestjs-amqp
 
 ## Description
 
@@ -8,7 +8,7 @@ This package serves as a comprehensive enhancement to the `@golevelup/nestjs-rab
 
 This package requires the installation of the following dependencies:
 
-- `@gedai/nestjs-core`
+- `@lootupteam/nestjs-core`
 
 This package seamlessly integrates with RabbitMQ's `X-Delayed Message` Plugin to handle the delayed retrial of messages, optimizing message delivery and processing. A `RabbitMQ Server` with the plugin installed is needed in order for this package to work.
 
@@ -19,7 +19,7 @@ This package seamlessly integrates with RabbitMQ's `X-Delayed Message` Plugin to
 Install the necessary packages with your favorite Package Manager.
 
 ```bash
-$ npm install @gedai/nestjs-core @gedai/nestjs-amqp @nestjs/config
+$ npm install @lootupteam/nestjs-core @lootupteam/nestjs-amqp @nestjs/config
 ```
 
 ### Step 2: Configuration Setup
@@ -28,7 +28,11 @@ Create a common NestJS `@Injectable()` provider class for your subscription hand
 
 ```typescript
 // app.subscription.ts
-import { AmqpHeaders, AmqpPayload, AmqpSubscription } from '@gedai/nestjs-amqp';
+import {
+  AmqpHeaders,
+  AmqpPayload,
+  AmqpSubscription,
+} from '@lootupteam/nestjs-amqp';
 import { Injectable, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
 
@@ -55,8 +59,8 @@ In your `app.module.ts`, import the required modules and set up the necessary de
 
 ```typescript
 // app.module.ts
-import { AmqpModule } from '@gedai/nestjs-amqp';
-import { ContextModule } from '@gedai/nestjs-core';
+import { AmqpModule } from '@lootupteam/nestjs-amqp';
+import { ContextModule } from '@lootupteam/nestjs-core';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
@@ -98,7 +102,7 @@ import {
   AmqpPayload,
   AmqpRetrialPolicy,
   AmqpSubscription,
-} from '@gedai/nestjs-amqp';
+} from '@lootupteam/nestjs-amqp';
 import { AppService } from './app.service';
 
 @Injectable()
@@ -132,7 +136,7 @@ import {
   AmqpPayload,
   AmqpSubscription,
   AmqpThrottlePolicy,
-} from '@gedai/nestjs-amqp';
+} from '@lootupteam/nestjs-amqp';
 import { AppService } from './app.service';
 
 @Injectable()
@@ -173,7 +177,7 @@ import {
   AmqpPayload,
   AmqpThrottlePolicy,
   AmqpSubscription,
-} from '@gedai/nestjs-amqp';
+} from '@lootupteam/nestjs-amqp';
 import { AppService } from './app.service';
 
 // Define DTOs with validation decorators
@@ -222,4 +226,4 @@ In the event `maximum attempts` is reached and the message continues to fail, it
 
 ## License
 
-Gedai is [MIT licensed](LICENSE).
+@lootupteam/nestjs-amqp is [MIT licensed](LICENSE).
