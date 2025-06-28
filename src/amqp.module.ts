@@ -13,7 +13,7 @@ import { InternalRabbitMQConfigFactory } from './utils/amqp.internals';
 @Global()
 @Module({
   imports: [
-    RabbitMQModule.forRootAsync(RabbitMQModule, {
+    RabbitMQModule.forRootAsync({
       inject: [MODULE_OPTIONS_TOKEN],
       useFactory: InternalRabbitMQConfigFactory,
     }),
